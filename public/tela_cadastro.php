@@ -1,9 +1,3 @@
-<?php
-
-require "../private/compilado.php";
-
-?>
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -27,18 +21,15 @@ require "../private/compilado.php";
                     <p class="text-center">Insira informações válidas</p>
 
                     <div class="form-group mb-2">
-                        <input class="form-control" type="text" id="nome" name="nome" placeholder="Nome Completo"
-                            required>
+                        <input class="form-control" type="text" id="nome" name="nome" placeholder="Nome Completo" required>
                     </div>
 
                     <div class="form-group mb-2">
-                        <input class="form-control" type="text" id="email" name="email" placeholder="Endereço de E-mail"
-                            required>
+                        <input class="form-control" type="email" id="email" name="email" placeholder="Endereço de E-mail" required>
                     </div>
 
                     <div class="form-group mb-2">
-                        <input class="form-control" type="password" id="senha" name="senha" placeholder="Senha"
-                            required>
+                        <input class="form-control" type="password" id="senha" name="senha" placeholder="Senha" required>
                     </div>
 
                     <div class="form-group mb-2">
@@ -46,12 +37,12 @@ require "../private/compilado.php";
                             <option value="" disabled selected hidden>Selecione um Gênero</option>
                             <option value="Masculino">Masculino</option>
                             <option value="Feminino">Feminino</option>
+                            <option value="Outro">Outro</option>
                         </select>
                     </div>
 
                     <div class="form-group mb-2">
-                        <input class="form-control" type="text" id="telefone" name="telefone" placeholder="Telefone"
-                            maxlength="15" pattern="\(\d{2}\)\s*\d{5}-\d{4}" required>
+                        <input class="form-control" type="text" id="telefone" name="telefone" placeholder="Telefone" maxlength="15" pattern="\(\d{2}\)\s*\d{5}-\d{4}" required>
                     </div>
 
                     <div class="form-group mb-2">
@@ -69,8 +60,7 @@ require "../private/compilado.php";
                     </div>
 
                     <div class="form-group mb-2">
-                        <button class="form-control button" type="submit" id="registrador"
-                            name="criar">Cadastrar</button>
+                        <button class="form-control button" type="submit" id="registrador" name="criar">Cadastrar</button>
                     </div>
 
                     <div class="link login-link text-center">Já possui Cadastro? <a href="../index.php">Entrar</a>
@@ -83,23 +73,33 @@ require "../private/compilado.php";
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="text/javascript" src="../public/js/buscacidade.js"></script>
     <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const tel = document.getElementById('telefone');
 
-        const tel = document.getElementById('telefone')
-
-        tel.addEventListener('keypress', (e) => mascaraTelefone(e.target.value))
-        tel.addEventListener('change', (e) => mascaraTelefone(e.target.value))
+            tel.addEventListener('input', (e) => mascaraTelefone(e.target.value));
+        });
 
         const mascaraTelefone = (valor) => {
-            valor = valor.replace(/\D/g, "")
-            valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2")
-            valor = valor.replace(/(\d)(\d{4})$/, "$1-$2")
-            tel.value = valor
-        }
+            valor = valor.replace(/\D/g, "");
+            valor = valor.replace(/^(\d{2})(\d)/g, "($1) $2");
+            valor = valor.replace(/(\d)(\d{4})$/, "$1-$2");
+            document.getElementById('telefone').value = valor;
+        };
 
-
-        $(function () {
-            $("#formucaduser").on("submit", function (event) {
+        $(function() {
+            $("#formucaduser").on("submit", function(event) {
                 event.preventDefault();
+
+                var valid = this.checkValidity();
+
+                if (!valid) {
+                    Swal.fire({
+                        title: 'Erro',
+                        text: 'Por favor, verifique os dados inseridos.',
+                        icon: 'error'
+                    });
+                    return;
+                }
 
                 var nome = $('#nome').val();
                 var email = $('#email').val();
@@ -109,44 +109,41 @@ require "../private/compilado.php";
                 var uf = $('#uf').val();
                 var cidade = $('#cidade').val();
 
-                $.post("./controle_cadastro_usuario.php", { nome, email, senha, sexo, telefone, uf, cidade }).done(function (retorno) {
-                    Swal.fire({
-                        title: 'Pronto',
-                        text: 'Cadastro realizado com sucesso!',
-                        icon: 'success'
-                    }).then(function(){
-                        location.reload();
-                    })
-                    
-                }).fail(function (retorno) {
+                $.post("../app/controller/usuario_controller.php", {
+                    nome,
+                    email,
+                    senha,
+                    sexo,
+                    telefone,
+                    uf,
+                    cidade
+                }).done(function(data) {
+                    rdata = JSON.parse(data);
+                    if (rdata.status === 'success') {
+                        Swal.fire({
+                            title: 'Pronto',
+                            text: rdata.message,
+                            icon: 'success'
+                        }).then(function() {
+                            window.location = "../index.php";
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Erro',
+                            text: rdata.message,
+                            icon: 'error'
+                        });
+                    }
+                }).fail(function(jqXHR) {
                     Swal.fire({
                         title: 'Erro',
-                        text: retorno.statusText,
+                        text: 'Falha na requisição',
                         icon: 'error'
-                    })
-                })
-            });
-
-        });
-    </script>
-    <script type="text/javascript">
-        $(function () {
-            $('#registrador').click(function () {
-
-                var valid = this.form.checkValidity();
-
-                if (!valid) {
-                    Swal.fire({
-                        title: 'Erro',
-                        text: 'Por favor, verifique os dados inseridos.',
-                        icon: 'error'
-                    })
-                }
+                    });
+                });
             });
         });
-
     </script>
-
 </body>
 
 </html>

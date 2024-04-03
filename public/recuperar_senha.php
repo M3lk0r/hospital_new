@@ -1,28 +1,24 @@
 <?php
-
 require "../private/compilado.php";
 
+if (isset($_POST['validar-email'])) {
 
-    if(isset($_POST['validar-email'])){
+    $email = $_POST['email'];
 
-        $email = $_POST['email'];
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $erro[] = "E-mail inválido";
+    }
 
-        if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-            $erro[] = "E-mail inválido";
-        }
+    $novasenha = substr(md5(time()), 0, 6);
 
-        $novasenha = substr(md5(time()), 0, 6);
-        
 
-        if(mail($email, "Sua nova senha", "Sua nova senha: ".$novasenha)){
+    if (mail($email, "Sua nova senha", "Sua nova senha: " . $novasenha)) {
 
         $sql = "UPDATE usuario SET senha = '$novasenha' WHERE email ='$email'";
         $consulta = $db->prepare($sql);
         $consulta->execute();
-        }
-        
     }
-
+}
 ?>
 
 <!DOCTYPE html>
@@ -46,7 +42,7 @@ require "../private/compilado.php";
                     <p class="text-center">Nos informe seu e-mail Cadastrado</p>
 
                     <div class="form-group mb-2">
-                        <input class="form-control" type="email" name="email" placeholder="Digite seu endereço de e-mail" required >
+                        <input class="form-control" type="email" name="email" placeholder="Digite seu endereço de e-mail" required>
                     </div>
                     <div class="form-group mb-2">
                         <input class="form-control button" type="submit" name="validar-email" value="Redefinir Senha">
